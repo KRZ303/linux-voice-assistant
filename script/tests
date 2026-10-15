@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
+import os
 import subprocess
-import venv
 from pathlib import Path
 import sys
 
@@ -12,11 +12,14 @@ _TESTS_DIR = _PROGRAM_DIR / "tests" / "unit"
 _TEST_DIRS = [_TESTS_DIR]
 
 if _VENV_DIR.exists():
-    context = venv.EnvBuilder().ensure_directories(_VENV_DIR)
-    python_exe = context.env_exe
+    python_exe = str(_VENV_DIR / "bin" / "python3")
 else:
     python_exe = "python3"
 
 
-subprocess.check_call([python_exe, "-m", "pytest"] + _TEST_DIRS)
+env = os.environ.copy()
+if sys.platform == "darwin":
+    env.setdefault("DYLD_FALLBACK_LIBRARY_PATH", f"{Path.home() / 'lib'}:/opt/homebrew/lib:/usr/local/lib:/usr/lib")
+
+subprocess.check_call([python_exe, "-m", "pytest"] + _TEST_DIRS, env=env)
 
